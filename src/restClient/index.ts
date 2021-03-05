@@ -1,11 +1,13 @@
 /* eslint-disable */
+import { CACHE_TYPES, Cache } from '../components/Cache/actions/types';
 
-import { completeAction, errorAction, startAction } from './utils';
+import { completeAction, errorAction, startAction, getCacheData } from './utils';
+import { isEmpty } from 'lodash';
 
 const actionType = (methodType: string, path: string) => `${methodType}_${path}`;
 
 abstract class BaseRestClient {
-  protected constructor(protected options: { request?: RequestInit; authHeader?: string; asBlob?: boolean } = {}) {}
+  protected constructor(protected options: { request?: RequestInit; authHeader?: string; asBlob?: boolean } = {}) { }
 
   protected buildLink(path: string, args: { [key: string]: any } = {}): string {
     const usedArgs: string[] = [];
@@ -149,7 +151,20 @@ export class AsyncRestClient extends BaseRestClient {
 
   $get<T>(path: string, type?: string, params?: { [key: string]: any }, transform?: (key: string, value: any) => T): void {
     const request = this.createRequestInit('GET');
-    this.fetchAsync(this.buildLink(path, params), type ? type : actionType('GET', path), request, transform, params);
+    const requestUrl = this.buildLink(path, params);
+    const requestType = type ? type : actionType('GET', path);
+    if (process.env.REACT_APP_CACHE_DATA === "true") {
+      const cachedData: Cache = getCacheData(requestUrl, requestType);
+      if (!isEmpty(cachedData)) {
+        startAction(cachedData.type);
+        completeAction(cachedData.type, cachedData.data, cachedData.params);
+      } else {
+        this.fetchAsync(requestUrl, requestType, request, transform, params);
+      }
+    } else {
+      this.fetchAsync(requestUrl, requestType, request, transform, params);
+    }
+
   }
 
   $patch<T>(path: string, data: any, type?: string, params?: { [key: string]: any }, transform?: (key: string, value: any) => T): void {
@@ -177,7 +192,17 @@ export class AsyncRestClient extends BaseRestClient {
     startAction(type);
 
     this.fetch(url, request, transform)
-      .then((data) => completeAction(type, data, params))
+      .then((data) => {
+        completeAction(type, data, params);
+        if (process.env.REACT_APP_CACHE_DATA === "true") {
+          completeAction(CACHE_TYPES.ADD, {
+            type: type,
+            name: url,
+            data: data,
+            params: params
+          }, {});
+        }
+      })
       .catch((error) => errorAction(type, error));
   }
 }
