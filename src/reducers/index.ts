@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import { combineReducers } from 'redux';
 import { reducer as form } from 'redux-form';
-import cache, { CacheState } from '../components/Cache/reducer/cache';
+import cache, { CacheState } from '../Cache/reducer/cache';
 import home, { HomeState } from '../components/Home/reducer/home';
 
 export interface IRootState {

@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { CACHE_TYPES, Cache } from '../components/Cache/actions/types';
+import { CACHE_TYPES, Cache } from '../Cache/actions/types';
 
 import { completeAction, errorAction, startAction, getCacheData } from './utils';
 import { isEmpty } from 'lodash';

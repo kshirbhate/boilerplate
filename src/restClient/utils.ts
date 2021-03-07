@@ -1,5 +1,5 @@
 import { differenceInMinutes } from 'date-fns';
-import { CACHE_TYPES, Cache } from '../components/Cache/actions/types';
+import { CACHE_TYPES, Cache } from '../Cache/actions/types';
 import store from '../store';
 
 export const OPERATIONS = {
